@@ -1,0 +1,6 @@
+
+[*]
+
+# ReSharper properties
+resharper_allow_comment_after_lbrace = true
+resharper_empty_block_style = together_same_line
