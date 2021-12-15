@@ -12,7 +12,7 @@ namespace AoC15.Test
 21");
             C.Search ();
             // asert
-            Assert.AreEqual(2, C.Risk);
+            Assert.AreEqual (2, C.Risk);
         }
 
 
@@ -31,20 +31,19 @@ namespace AoC15.Test
         [Test]
         public void Test_TestCave ()
         {
-            Cave C = new Cave (@"1163751742
-1381373672
-2136511328
-3694931569
-7463417111
-1319128137
-1359912421
-3125421639
-1293138521
-2311944581");
+            Cave C = new Cave (Input.Test);
             C.Search ();
             // asert
             Assert.AreEqual (40, C.Risk);
         }
 
+        [Test]
+        public void Test_TestCave_Problem2 ()
+        {
+            Cave C = new Cave (Input.Test, true);
+            C.Search ();
+            // asert
+            Assert.AreEqual (315, C.Risk);
+        }
     }
 }
