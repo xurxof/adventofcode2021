@@ -25,7 +25,7 @@ namespace AoC16.Test
         public void Test_GetPacket ()
         {
             // asert
-            Packet P = Bits.GetPacket ("110100101111111000101000");
+            Literal P = Bits.GetPacket ("110100101111111000101000");
             Assert.AreEqual (6, P.Version);
             Assert.AreEqual (4, P.Id);
             Assert.AreEqual (2021, P.Number);
@@ -41,8 +41,8 @@ namespace AoC16.Test
             Assert.AreEqual (15, O.LenTypeId);
             Assert.AreEqual (49, O.Consumed);
             Assert.AreEqual (2, O.Childs.Count);
-            Assert.AreEqual (10, ((Packet) O.Childs[0]).Number);
-            Assert.AreEqual (20, ((Packet) O.Childs[1]).Number);
+            Assert.AreEqual (10, ((Literal) O.Childs[0]).Number);
+            Assert.AreEqual (20, ((Literal) O.Childs[1]).Number);
 
         }
 
@@ -56,10 +56,10 @@ namespace AoC16.Test
             Assert.AreEqual (3, O.TypeId);
             Assert.AreEqual (11, O.LenTypeId);
             Assert.AreEqual (3, O.Childs.Count);
-            Assert.AreEqual (1, ((Packet) O.Childs[0]).Number);
-            Assert.AreEqual (2, ((Packet) O.Childs[1]).Number);
+            Assert.AreEqual (1, ((Literal) O.Childs[0]).Number);
+            Assert.AreEqual (2, ((Literal) O.Childs[1]).Number);
 
-            Assert.AreEqual (3, ((Packet) O.Childs[2]).Number);
+            Assert.AreEqual (3, ((Literal) O.Childs[2]).Number);
 
         }
 
