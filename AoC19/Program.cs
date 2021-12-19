@@ -13,10 +13,12 @@ namespace AoC19
     {
         private List<Point> _Points = new List<Point> ();
 
-        public List<Point> Points
+        public IEnumerable<Point> Points
         {
             get => _Points;
-            set => _Points = value;
+            set { _Points = value.ToList ();
+                _Distances = null;
+            }
         }
 
         public (int BestOverlappedCount, (int rotationX, int rotationY, int rotationZ) RotationToOriginal, Point IncrementToOriginal, Point IncrementToOther, List<Point> OverlappedPoints, List<Point> TransformedPoints) Compare (Scanner other)
@@ -28,7 +30,7 @@ namespace AoC19
             List<Point> bestTransformedPoints = new List<Point> ();
             List<Point> bestOverlappedPoints = new List<Point> ();
             Point bestIncrementToOther = default;
-            var LocalDistances = Distances ().GroupBy (d=>d.Distance).Select (d=>new { Distance=d.Key, Points=d.SelectMany (pd=>pd.Points).Distinct().ToList () });
+            var LocalDistances = Distances ().GroupBy (d => d.Distance).Select (d => new { Distance = d.Key, Points = d.SelectMany (pd => pd.Points).Distinct ().ToList () });
             var OtherDistances = other.Distances ().GroupBy (d => d.Distance)
                 .Select (d => new
                 {
@@ -61,13 +63,13 @@ namespace AoC19
                                     //
                                     // aplicamos todos la transformacion a todos los puntos de other
                                     // y comparamos cuantos sin iguales
-                                    var TransformedPoints = other.Points.AsParallel ()
+                                    var TransformedPoints = other.Points
                                         .Select (p => p.Rotate (rotationX)
                                             .Rotate (rotationY)
                                             .Rotate (rotationZ)
                                             .Increment (incrementToLocal))
                                         .ToList ();
-                                    var OverlappedPoints = TransformedPoints.AsParallel ()
+                                    var OverlappedPoints = TransformedPoints
                                         .Where (o => Points.Contains (o))
                                         .ToList ();
                                     if (OverlappedPoints.Count () > best)
@@ -91,24 +93,30 @@ namespace AoC19
 
         }
 
+        private List<PointsDistance> _Distances;
+        
+
         public IEnumerable<PointsDistance> Distances ()
         {
-            for (int i = 0; i < _Points.Count; i++)
+            if (_Distances != null) return _Distances;
+            _Distances = new List<PointsDistance> ();
+            for (int i = 0; i < _Points.Count(); i++)
             {
-                for (int j = 0; j < _Points.Count; j++)
+                for (int j = i; j < _Points.Count(); j++)
                 {
                     if (i == j) continue;
                     var d = _Points[i]
                         .To (_Points[j]);
-                    yield return new PointsDistance (_Points[i], _Points[j], d);
+                    _Distances .Add( new PointsDistance (_Points[i], _Points[j], d));
                 }
             }
+            return _Distances;
         }
 
         public static Scanner From (string input)
         {
             var B = new Scanner ();
-            foreach (var line in input.Trim().Split (Environment.NewLine))
+            foreach (var line in input.Trim ().Split (Environment.NewLine))
             {
                 B._Points.Add (Point.From (line));
             }
@@ -148,37 +156,41 @@ namespace AoC19
         public static IEnumerable<Point> IterativeCompare (Scanner[] scanners)
         {
             List<Scanner> Pending = new List<Scanner> (scanners.Skip (1));
-            List<Scanner> Transformed = new List < Scanner > (scanners.Take(1));
+            // Scanner Transformed = scanners.First (); 
+            List<Scanner> Processed = new List<Scanner> ();
 
+            List<Scanner> ToCompare = scanners.Take (1)
+                .ToList ();
             while (Pending.Any ())
             {
                 bool change = false;
+                List<Scanner> ToCompareNext = new List<Scanner> ();
                 foreach (var p in Pending)
                 {
-                    foreach (var t in Transformed)
+                    foreach (var t in ToCompare)
                     {
                         var result = t.Compare (p);
                         if (result.BestOverlappedCount >= 12)
                         {
-                            Pending.Remove (p);
+                            // Pending.Remove (p);
                             p.Points = result.TransformedPoints;
-                            Transformed.Add (p);
-                            // Transformed.Points.AddRange (result.TransformedPoints);
-                            // Transformed.Points = Transformed.Points.Distinct ()
-                            //    .ToList ();
-                            change = true;
-                            Debug.WriteLine ($"{Pending.Count}");
-                            break;
-                        }
-                    }
-                    if (change)
-                        break;
-                }
-                if(!change)
-                    throw new InvalidOperationException (); 
-            }
-            return Transformed.SelectMany (t=>t.Points).Distinct();
 
+                            ToCompareNext.Add (p);
+                            // Union() includes Distinct()
+                            //t.Points = t.Points.Union (result.TransformedPoints)
+                            //    .ToList (); 
+                            Debug.WriteLine ($"{Pending.Count}");
+                        }
+                    } 
+                }
+                Pending.RemoveAll (p => ToCompareNext.Contains (p));
+                Processed.AddRange (ToCompare);
+                ToCompare = ToCompareNext;
+
+            }
+            Processed.AddRange (ToCompare);
+            /// return Transformed.Points;
+            return Processed.SelectMany (t => t.Points).Distinct();
         }
     }
 
@@ -196,7 +208,7 @@ namespace AoC19
 
         public static Point From (string input)
         {
-            var p = input.Trim().Split (',')
+            var p = input.Trim ().Split (',')
                 .Select (int.Parse)
                 .ToArray ();
             return new Point (p[0], p[1], p[2]);
@@ -281,7 +293,7 @@ namespace AoC19
         {
             string tmp = "";
             var _Scanners = new List<Scanner> ();
-            foreach(var line in Input.Problem.Split (Environment.NewLine))
+            foreach (var line in Input.Problem.Split (Environment.NewLine))
             {
                 if (line.Contains ("---")) continue;
                 if (line == "")
@@ -291,12 +303,12 @@ namespace AoC19
                     tmp = "";
                     continue;
                 }
-                tmp += line+Environment.NewLine;
+                tmp += line + Environment.NewLine;
 
             }
             var Result = Scanner.IterativeCompare (_Scanners.ToArray ());
-            // 398 -> too low
-            return Result.Count();
+            // 398 -> too low, 13:33 
+            return Result.Count ();
         }
 
         public static int Part2 () => 0;
