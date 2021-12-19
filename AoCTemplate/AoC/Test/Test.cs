@@ -9,7 +9,7 @@ namespace AoC8.test
         public void Test_True ()
         {
             // asert
-            Assert.AreTrue (true);
+            Assert.True (true);
         }
 
      

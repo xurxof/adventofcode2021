@@ -22,8 +22,8 @@ namespace AoC9
         static void Main (string[] args)
         {
             // Music: https://www.youtube.com/watch?v=nF00Rb3IFJs
-            Debug.WriteLine (Part1 (Input.Test.ToInput ()));
-            Debug.WriteLine (Part2 (Input.Test.ToInput ()));
+            Debug.WriteLine (Part1 ());
+            Debug.WriteLine (Part2 ());
         }
     }
 }
