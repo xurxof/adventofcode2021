@@ -193,7 +193,7 @@ namespace AoC19.Test
             CollectionAssert.AreEquivalent (expected, Best.OverlappedPoints);
             Assert.AreEqual ((0, 0, 8), Best.RotationToOriginal);
             Assert.AreEqual (new Point (68, -1246, -43), Best.IncrementToOriginal);
-            //Assert.AreEqual (new Point (-68, 1246, 43), Best.IncrementToOther);
+    
         }
 
         [Test]
@@ -316,10 +316,10 @@ namespace AoC19.Test
             {
                 Scanner.From (Scanner0), Scanner.From (Scanner1), Scanner.From (Scanner2), Scanner.From (Scanner3), Scanner.From (Scanner4),
             });
-            Assert.AreEqual (79, R.Count ());
+            Assert.AreEqual (79, R.Points.Count ());
             CollectionAssert.AreEquivalent (Scanner.From (Result)
                     .Points,
-                R);
+                R.Points);
         }
 
 

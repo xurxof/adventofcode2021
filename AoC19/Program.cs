@@ -135,7 +135,7 @@ namespace AoC19
             return B;
         }
 
-        public static IEnumerable<Point> IterativeCompare (Scanner[] scanners)
+        public static (IEnumerable<Point> Points, List<Point> ScannerCoord) IterativeCompare (Scanner[] scanners)
         {
             List<Scanner> Pending = new List<Scanner> (scanners.Skip (1));
             // Scanner Transformed = scanners.First (); 
@@ -143,6 +143,8 @@ namespace AoC19
 
             List<Scanner> ToCompare = scanners.Take (1)
                 .ToList ();
+            List<Point> _ScannerCoord = new List<Point> ();
+            _ScannerCoord.Add (new Point (0, 0, 0));
             while (Pending.Any ())
             {
                 bool change = false;
@@ -160,7 +162,7 @@ namespace AoC19
                         {
                             // Pending.Remove (p);
                             p.Points = result.TransformedPoints;
-
+                            _ScannerCoord.Add (result.IncrementToOriginal);
                             ToCompareNext.Add (p);
                             // Union() includes Distinct()
                             //t.Points = t.Points.Union (result.TransformedPoints)
@@ -175,8 +177,8 @@ namespace AoC19
             }
             Processed.AddRange (ToCompare);
             /// return Transformed.Points;
-            return Processed.SelectMany (t => t.Points)
-                .Distinct ();
+            return (Processed.SelectMany (t => t.Points)
+                .Distinct (),_ScannerCoord);
         }
 
         public override string ToString () => $"{_Points.Count}";
@@ -293,6 +295,7 @@ namespace AoC19
         public Point Transform (int rotation, Point variation) =>
             Rotate (rotation)
                 .Increment (variation);
+         
     }
 
     class Program
@@ -328,7 +331,18 @@ namespace AoC19
             var Result = Scanner.IterativeCompare (_Scanners.ToArray ());
             // 398 -> too low, 13:33 
             // 404 -> 1:15
-            return Result.Count ();
+            Debug.WriteLine (Result.Points.Count ());
+            List<int> Manhattan = new List<int> ();
+            foreach (var center1 in Result.ScannerCoord)
+            {
+                foreach (var center2 in Result.ScannerCoord)
+                {
+                    Manhattan.Add (Math.Abs (center1.X - center2.X) + Math.Abs (center1.Y - center2.Y) + Math.Abs (center1.Z - center2.Z));
+                }
+            }
+
+            Debug.WriteLine (Manhattan.Max());
+            return 0;
         }
 
         public static int Part2 () => 0;
