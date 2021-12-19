@@ -2,47 +2,61 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading;
 using AoC9;
-using Utils;
 
 namespace AoC19
 {
     [DebuggerDisplay ("{ToString()}")]
     public class Scanner
     {
+        private List<PointsDistance> _Distances;
         private List<Point> _Points = new List<Point> ();
 
         public IEnumerable<Point> Points
         {
             get => _Points;
-            set { _Points = value.ToList ();
+            set
+            {
+                _Points = value.ToList ();
                 _Distances = null;
             }
         }
 
-        public (int BestOverlappedCount, (int rotationX, int rotationY, int rotationZ) RotationToOriginal, Point IncrementToOriginal, Point IncrementToOther, List<Point> OverlappedPoints, List<Point> TransformedPoints) Compare (Scanner other)
+        public (int BestOverlappedCount, (int rotationX, int rotationY, int rotationZ) RotationToOriginal, Point IncrementToOriginal, Point IncrementToOther, List<Point> OverlappedPoints, List<Point>
+            TransformedPoints) Compare (Scanner other)
         {
-
             int best = 0;
             (int rotationX, int rotationY, int rotationZ) bestRotationToOriginal = default;
             Point bestIncrementToOriginal = default;
             List<Point> bestTransformedPoints = new List<Point> ();
             List<Point> bestOverlappedPoints = new List<Point> ();
             Point bestIncrementToOther = default;
-            var LocalDistances = Distances ().GroupBy (d => d.Distance).Select (d => new { Distance = d.Key, Points = d.SelectMany (pd => pd.Points).Distinct ().ToList () });
-            var OtherDistances = other.Distances ().GroupBy (d => d.Distance)
+            var LocalDistances = Distances ()
+                .GroupBy (d => d.Distance)
                 .Select (d => new
                 {
                     Distance = d.Key,
                     Points = d.SelectMany (pd => pd.Points)
-                        .Distinct ().ToList ()
+                        .Distinct ()
+                        .ToList ()
+                });
+            var OtherDistances = other.Distances ()
+                .GroupBy (d => d.Distance)
+                .Select (d => new
+                {
+                    Distance = d.Key,
+                    Points = d.SelectMany (pd => pd.Points)
+                        .Distinct ()
+                        .ToList ()
                 });
 
             foreach (var localDistance in LocalDistances)
             {
                 var potentialOtherPoints = OtherDistances.FirstOrDefault (od => od.Distance == localDistance.Distance);
-                if (potentialOtherPoints == null) continue;
+                if (potentialOtherPoints == null)
+                {
+                    continue;
+                }
                 foreach (var localPoint in localDistance.Points)
                 {
                     foreach (var otherPoint in potentialOtherPoints.Points)
@@ -52,7 +66,6 @@ namespace AoC19
                         {
                             foreach (var rotationY in new[] { 0, 4, 5, 6 })
                             {
-
                                 foreach (var rotationZ in new[] { 0, 7, 8, 9 })
                                 {
                                     Point otherRotated = otherPoint.Rotate (rotationX)
@@ -63,14 +76,12 @@ namespace AoC19
                                     //
                                     // aplicamos todos la transformacion a todos los puntos de other
                                     // y comparamos cuantos sin iguales
-                                    var TransformedPoints = other.Points
-                                        .Select (p => p.Rotate (rotationX)
+                                    var TransformedPoints = other.Points.Select (p => p.Rotate (rotationX)
                                             .Rotate (rotationY)
                                             .Rotate (rotationZ)
                                             .Increment (incrementToLocal))
                                         .ToList ();
-                                    var OverlappedPoints = TransformedPoints
-                                        .Where (o => Points.Contains (o))
+                                    var OverlappedPoints = TransformedPoints.Where (o => Points.Contains (o))
                                         .ToList ();
                                     if (OverlappedPoints.Count () > best)
                                     {
@@ -82,32 +93,32 @@ namespace AoC19
                                         bestTransformedPoints = TransformedPoints;
                                     }
                                 }
-
                             }
                         }
                     }
                 }
             }
-            return (best, bestRotationToOriginal, bestIncrementToOriginal, bestIncrementToOther,
-                bestOverlappedPoints, bestTransformedPoints);
-
+            return (best, bestRotationToOriginal, bestIncrementToOriginal, bestIncrementToOther, bestOverlappedPoints, bestTransformedPoints);
         }
-
-        private List<PointsDistance> _Distances;
-        
 
         public IEnumerable<PointsDistance> Distances ()
         {
-            if (_Distances != null) return _Distances;
-            _Distances = new List<PointsDistance> ();
-            for (int i = 0; i < _Points.Count(); i++)
+            if (_Distances != null)
             {
-                for (int j = i; j < _Points.Count(); j++)
+                return _Distances;
+            }
+            _Distances = new List<PointsDistance> ();
+            for (int i = 0; i < _Points.Count (); i++)
+            {
+                for (int j = i; j < _Points.Count (); j++)
                 {
-                    if (i == j) continue;
+                    if (i == j)
+                    {
+                        continue;
+                    }
                     var d = _Points[i]
                         .To (_Points[j]);
-                    _Distances .Add( new PointsDistance (_Points[i], _Points[j], d));
+                    _Distances.Add (new PointsDistance (_Points[i], _Points[j], d));
                 }
             }
             return _Distances;
@@ -116,41 +127,12 @@ namespace AoC19
         public static Scanner From (string input)
         {
             var B = new Scanner ();
-            foreach (var line in input.Trim ().Split (Environment.NewLine))
+            foreach (var line in input.Trim ()
+                .Split (Environment.NewLine))
             {
                 B._Points.Add (Point.From (line));
             }
             return B;
-        }
-
-        public override string ToString () => $"{_Points.Count}";
-
-        [DebuggerDisplay ("{ToString()}")]
-        public class PointsDistance
-        {
-            public PointsDistance (Point p1, Point p2, decimal distance)
-            {
-                P1 = p1;
-                P2 = p2;
-                Distance = distance;
-            }
-
-            public override string ToString () => $"[{Distance}] {P1}=>{P2}";
-
-            public decimal Distance { get; }
-
-            public Point P1 { get; }
-
-            public Point P2 { get; }
-
-            public IEnumerable<Point> Points => new[] { P1, P2 };
-        }
-
-        public void Transform (int rotation, Point increment)
-        {
-            _Points = _Points.Select (p => p.Rotate (rotation)
-                    .Increment (increment))
-                .ToList ();
         }
 
         public static IEnumerable<Point> IterativeCompare (Scanner[] scanners)
@@ -169,6 +151,10 @@ namespace AoC19
                 {
                     foreach (var t in ToCompare)
                     {
+                        if (ToCompareNext.Contains (p))
+                        {
+                            continue;
+                        }
                         var result = t.Compare (p);
                         if (result.BestOverlappedCount >= 12)
                         {
@@ -181,16 +167,46 @@ namespace AoC19
                             //    .ToList (); 
                             Debug.WriteLine ($"{Pending.Count}");
                         }
-                    } 
+                    }
                 }
                 Pending.RemoveAll (p => ToCompareNext.Contains (p));
                 Processed.AddRange (ToCompare);
                 ToCompare = ToCompareNext;
-
             }
             Processed.AddRange (ToCompare);
             /// return Transformed.Points;
-            return Processed.SelectMany (t => t.Points).Distinct();
+            return Processed.SelectMany (t => t.Points)
+                .Distinct ();
+        }
+
+        public override string ToString () => $"{_Points.Count}";
+
+        public void Transform (int rotation, Point increment)
+        {
+            _Points = _Points.Select (p => p.Rotate (rotation)
+                    .Increment (increment))
+                .ToList ();
+        }
+
+        [DebuggerDisplay ("{ToString()}")]
+        public class PointsDistance
+        {
+            public PointsDistance (Point p1, Point p2, decimal distance)
+            {
+                P1 = p1;
+                P2 = p2;
+                Distance = distance;
+            }
+
+            public decimal Distance { get; }
+
+            public Point P1 { get; }
+
+            public Point P2 { get; }
+
+            public IEnumerable<Point> Points => new[] { P1, P2 };
+
+            public override string ToString () => $"[{Distance}] {P1}=>{P2}";
         }
     }
 
@@ -208,7 +224,8 @@ namespace AoC19
 
         public static Point From (string input)
         {
-            var p = input.Trim ().Split (',')
+            var p = input.Trim ()
+                .Split (',')
                 .Select (int.Parse)
                 .ToArray ();
             return new Point (p[0], p[1], p[2]);
@@ -273,11 +290,9 @@ namespace AoC19
 
         public Point Increment (Point other) => new Point (X + other.X, Y + other.Y, Z + other.Z);
 
-        public Point Transform (int rotation, Point variation)
-        {
-            return Rotate (rotation)
+        public Point Transform (int rotation, Point variation) =>
+            Rotate (rotation)
                 .Increment (variation);
-        }
     }
 
     class Program
@@ -295,7 +310,10 @@ namespace AoC19
             var _Scanners = new List<Scanner> ();
             foreach (var line in Input.Problem.Split (Environment.NewLine))
             {
-                if (line.Contains ("---")) continue;
+                if (line.Contains ("---"))
+                {
+                    continue;
+                }
                 if (line == "")
                 {
                     var s = Scanner.From (tmp);
@@ -304,10 +322,12 @@ namespace AoC19
                     continue;
                 }
                 tmp += line + Environment.NewLine;
-
             }
+            var last = Scanner.From (tmp);
+            _Scanners.Add (last);
             var Result = Scanner.IterativeCompare (_Scanners.ToArray ());
             // 398 -> too low, 13:33 
+            // 404 -> 1:15
             return Result.Count ();
         }
 
