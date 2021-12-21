@@ -97,7 +97,7 @@ namespace AoC8.test
         [Test]
         public void EnhalceImage_50 ()
         {
-            Scanner S = new Scanner (Input.Test, 100);
+            Scanner S = new Scanner (Input.Test, 5000);
 
             S.EnhalceImage (50);
 
