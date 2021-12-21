@@ -1,4 +1,5 @@
-﻿using AoC21;
+﻿using System.Diagnostics;
+using AoC21;
 using NUnit.Framework;
 
 namespace AoC8.test
@@ -34,6 +35,19 @@ namespace AoC8.test
             var B = new Board (4, 8);
             var loserScore = B.PlayAndGetLoserScore ();
             Assert.AreEqual (739785, loserScore); 
+        }
+
+
+        [Test]
+        public void PlaySimpleDirac ()
+        {
+            // asert
+            var B = new BoardDirac (1, 1);
+            B.PlayOnce ();
+            Debug.WriteLine ($"{(B.Wins1, B.Wins2)}");
+            Assert.AreEqual (104, B.Wins1);
+            Assert.AreEqual (1, B.Wins2);
+
         }
     }
 }
